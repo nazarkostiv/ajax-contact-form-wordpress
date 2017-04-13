@@ -1,47 +1,46 @@
 <?php
+
+// AJAX send contact form
 function contacts_form()
 {
-    $name    = trim(htmlspecialchars($_POST['name']));
-    $mail    = trim(htmlspecialchars($_POST['email']));
-    $phone    = trim(htmlspecialchars($_POST['phone']));
+    $headers  = 'Content-type: text/html; charset=utf-8';
+
+    $name = trim(htmlspecialchars($_POST['name']));
+    $mail = trim(htmlspecialchars($_POST['email']));
+    $phone = trim(htmlspecialchars($_POST['phone']));
     $comment = trim(htmlspecialchars($_POST['comment']));
-    
-    $headers[] = 'Content-type: text/html; charset=utf-8';
-    
+
+    $mailTo = 'youremail@mail.com';
+
     $textMessage = "<table>
-        <tr>
-            <td style='padding: 5px 0px;'><b>Ім'я:</b></td>
-            <td style='padding: 5px 0px; padding-left: 20px;'>" . $name . "</td>
-        </tr>
-        <tr>
-            <td style='padding: 5px 0px;'><b>E-mail:</b></td>
-            <td style='padding: 5px 0px; padding-left: 20px;'>" . $mail . "</td>
-        </tr>
-        <tr>
-            <td style='padding: 5px 0px;'><b>Телефон:</b></td>
-            <td style='padding: 5px 0px; padding-left: 20px;'>" . $phone . "</td>
-        </tr>
-        <tr>
-            <td style='padding: 5px 0px;'><b>Повідомлення:</b></td>
-            <td style='padding: 5px 0px; padding-left: 20px;'>" . $comment . "</td>
-        </tr>";
-    
-    $textMessage .= "</table>";
-
-    $emails = array(
-        'email@.com',
-        );
-
-    if (wp_mail($emails, 'Site name', $textMessage, $headers)) {
-        echo 1;
-    } else {
-        echo 0;
+                        <tr>
+                            <td style='padding: 5px 0px;'><b>Name:</b></td>
+                            <td style='padding: 5px 0px; padding-left: 20px;'>" . $name . "</td>
+                        </tr>";
+    if(!empty($mail)) {
+        $textMessage .= "<tr>
+                            <td style='padding: 5px 0px;'><b>E-mail:</b></td>
+                            <td style='padding: 5px 0px; padding-left: 20px;'>" . $mail . "</td>
+                        </tr>";
     }
-    
+    if(!empty($phone)) {
+        $textMessage .= "<tr>
+                            <td style='padding: 5px 0px;'><b>Phone:</b></td>
+                            <td style='padding: 5px 0px; padding-left: 20px;'>" . $phone . "</td>
+                        </tr>";
+    }
+    if(!empty($comment)) {
+        $textMessage .= "<tr>
+                            <td style='padding: 5px 0px;'><b>Comment:</b></td>
+                            <td style='padding: 5px 0px; padding-left: 20px;'>" . $comment ."</td>
+                        </tr>
+                    </table>";
+    }
+    if(!empty($name) || !empty($mail) || !empty($phone)) {
+        wp_mail($mailTo, '|Your Site', $textMessage, $headers);
+    }
     wp_die();
 }
 
 add_action('wp_ajax_contacts_form', 'contacts_form');
 add_action('wp_ajax_nopriv_contacts_form', 'contacts_form');
-
-?>
