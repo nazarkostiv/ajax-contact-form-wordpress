@@ -11,7 +11,8 @@ function contacts_form()
     $comment = trim(htmlspecialchars($_POST['comment']));
 
     $mailTo = 'youremail@mail.com';
-
+    //$mailTo = get_field('email', 'option');
+    
     $textMessage = "<table>
                         <tr>
                             <td style='padding: 5px 0px;'><b>Name:</b></td>
