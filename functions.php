@@ -1,4 +1,13 @@
 <?php
+add_filter( 'wp_mail_from_name', 'my_mail_from_name' );
+function my_mail_from_name( $name ) {
+    return "Site name";
+}
+
+add_filter( 'wp_mail_from', 'my_mail_from' );
+function my_mail_from( $email ) {
+    return "your@email.com";
+}
 
 // AJAX send contact form
 function contacts_form()
