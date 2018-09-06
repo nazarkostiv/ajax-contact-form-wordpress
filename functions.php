@@ -1,56 +1,73 @@
 <?php
-add_filter( 'wp_mail_from_name', 'my_mail_from_name' );
-function my_mail_from_name( $name ) {
-    return "Site name";
-}
 
-add_filter( 'wp_mail_from', 'my_mail_from' );
-function my_mail_from( $email ) {
-    return "your@email.com";
-}
-
-// AJAX send contact form
-function contacts_form()
-{
-    $headers  = 'Content-type: text/html; charset=utf-8';
-
-    $name = trim(htmlspecialchars($_POST['name']));
-    $mail = trim(htmlspecialchars($_POST['email']));
-    $phone = trim(htmlspecialchars($_POST['phone']));
-    $comment = trim(htmlspecialchars($_POST['comment']));
-
-    $mailTo = 'youremail@mail.com';
-    //$mailTo = get_field('email', 'option');
-    
-    $textMessage = "<table>
-                        <tr>
-                            <td style='padding: 5px 0px;'><b>Name:</b></td>
-                            <td style='padding: 5px 0px; padding-left: 20px;'>" . $name . "</td>
-                        </tr>";
-    if(!empty($mail)) {
-        $textMessage .= "<tr>
-                            <td style='padding: 5px 0px;'><b>E-mail:</b></td>
-                            <td style='padding: 5px 0px; padding-left: 20px;'>" . $mail . "</td>
-                        </tr>";
-    }
-    if(!empty($phone)) {
-        $textMessage .= "<tr>
-                            <td style='padding: 5px 0px;'><b>Phone:</b></td>
-                            <td style='padding: 5px 0px; padding-left: 20px;'>" . $phone . "</td>
-                        </tr>";
-    }
-    if(!empty($comment)) {
-        $textMessage .= "<tr>
-                            <td style='padding: 5px 0px;'><b>Comment:</b></td>
-                            <td style='padding: 5px 0px; padding-left: 20px;'>" . $comment ."</td>
-                        </tr>
-                    </table>";
-    }
-    if(!empty($name) || !empty($mail) || !empty($phone)) {
-        wp_mail($mailTo, '|Your Site', $textMessage, $headers);
-    }
-    wp_die();
-}
-
+/*
+* Contact Form Handler
+*/
 add_action('wp_ajax_contacts_form', 'contacts_form');
 add_action('wp_ajax_nopriv_contacts_form', 'contacts_form');
+
+function contacts_form()
+{
+    $message = '';
+
+    $name = trim( strip_tags( htmlspecialchars( $_POST['name'] ) ) );
+    $email = trim( strip_tags( htmlspecialchars( $_POST['email'] ) ) );
+    $phone = trim( strip_tags( htmlspecialchars( $_POST['phone'] ) ) );
+    $text = trim( strip_tags(htmlspecialchars( $_POST['message'] ) ) );
+
+    $response = array(
+        'status' => true,
+        'message' => array()
+    );
+
+    /** Name Validation */
+    if ( empty( $name ) ) {
+        $response['status'] = false;
+        $response['message']['name'] = 'Name is required';
+    } else if ( ! preg_match( "/^[a-zA-Z ]*$/", $name ) ) {
+        $response['status'] = false;
+        $response['message']['name'] = 'Only letters';
+    } else {
+        $message .= 'Name: ' . $name . ', ';
+    }
+
+    /** Email Validation */
+    if ( empty( $email ) ) {
+        $response['status'] = false;
+        $response['message']['email'] = 'Email is required';
+    } else if ( ! filter_var( $email, FILTER_VALIDATE_EMAIL ) ) {
+        $response['status'] = false;
+        $response['message']['email'] = 'Invalid email format';
+    } else {
+        $message .= 'Email: ' . $email . ', ';
+    }
+
+    /** Phone Validation */
+    if ( ! empty( $phone ) ) {
+        $phone = str_replace( array( ' ', '-', '.', '(', ')' ), '', $phone );
+
+        if ( strlen( $phone ) <= 8 OR strlen( $phone ) >= 13 AND ! preg_match('/([0-9]{8,13})/', $phone ) ) {
+            $response['status'] = false;
+            $response['message']['phone'] = 'Invalid first phone format';
+        }
+    } else {
+        $message .= 'First Phone: ' . $phone . ', ';
+    }
+
+    /** Message Validation */
+    if ( ! empty( $text ) ) {
+        $message .= 'Message: ' . $text . '.';
+    }
+
+    if ( $response['status'] == true ) {
+        $headers = 'Content-type: text/html; charset=utf-8';
+        $subject = bloginfo('name') . ' | Contact Form';
+        $send_messages_to = get_theme_mod('address');
+
+//        $mail_send = wp_mail($send_messages_to, $subject, $message, $headers);
+    }
+
+    echo json_encode($response);
+
+    die();
+}

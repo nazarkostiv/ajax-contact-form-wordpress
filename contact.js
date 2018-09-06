@@ -1,62 +1,39 @@
-$('#form_contact').submit(function(){ // Form submit
+$('#form_contact').submit(function(){
+    event.preventDefault();
 
-    // Clear all fields
-    $("#user_name, #user_email, #user_phone, #user_comment").val('');
+    var name = $('input[name=name]').val();
+    var email = $('input[name=email]').val();
+    var phone = $('input[name=phone]').val();
+    var message = $('textarea[name=message]').val();
 
-    // Functions
-    function isValidEmailAddress(email) {
-        var pattern = new RegExp(/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/i);
-        return pattern.test(email);
+    var data = {
+        'action' : 'contact_form',
+        'name' : name,
+        'email' : email,
+        'phone' : phone,
+        'message' : message
     };
-    function isValidPhoneAddress(phone) {
-        var pattern = new RegExp(/\b[+]?[-0-9\(\) ]{10,20}\b/);
-        return pattern.test(phone);
-    };
 
-    // Some variables
-    var submit = 0;
-    var requareName = true;
-    var name = $('#user_name').val();
-    var mail = $('#user_email').val();
-    var phone = $('#user_phone').val();
-    var comment = $('#user_comment').val();
+    $.ajax({
+        type: 'POST',
+        url: '/wp-admin/admin-ajax.php', /* OR url: '<?php echo admin_url('admin-ajax.php') ?>', */
+        data: data,
+        beforeSend: function (xhr){
+        },
+        success: function (data){
+           if(data){
+                var response = JSON.parse(data);
 
-    // Form validation
-    // Name validate
-    if( name.length < 2) {
-        submit++;
-        requareName = false;
-    } else {
-    }
-    // Phone validate
-    if(!isValidPhoneAddress(phone)) {
-        submit++;
-    } else if(isValidEmailAddress(mail)) {
-        submit--;
-    } else {
-        submit--;
-    }
-    // Email validate
-    if(!isValidEmailAddress(mail)) {
-        submit++;
-    } else if(isValidPhoneAddress(phone)) {
-        submit--;
-    } else {
-        submit--;
-    }
+                if(response.status == false){
+                    console.log(response.message);
+                }
 
-    // Send form data
-    var data = $(this).serialize();
-    if( submit < 1 && requareName != false ) {    
-        jQuery.ajax({
-            type: 'POST',
-            url: "/wp-admin/admin-ajax.php",
-            data: data + '&action=contacts_form',
-            success: function (data) {
-                $("#user_name, #user_email, #user_phone, #user_comment").val('');
-            },
-            error: function (xhr, ajaxOptions, thrownError) {
+                if (response.status == true) {
+                    $('#form_contact')[0].reset();
+                }
             }
-        });
-    }
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+        }
+    });
 });
